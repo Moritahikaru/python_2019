@@ -8,11 +8,10 @@ import tkinter.font as tkFont
 x=0
 y=0
 L=[]
-fre='0'
-laf='0'
-data='0'
-ep=0.0
-var=0
+fre=0 #測定範囲の最小値
+laf=0 #1目盛りの周波数
+data=0 #測定範囲の最大値
+var=0 #現在の周波数を出力
 
 def maindef():
     global x
@@ -29,11 +28,7 @@ def maindef():
     elif x==1 and y==0:
         x=0
     elif x==0 and y==1:
-        #データ受け取り、appen
-        var=tk.StringVar()
-        var.set(fre)
-        voltage_exit=tk.Entry(root,font=font,textvariable=var) #受け取ったデータをGUIに表示する
-        voltage_exit.grid(row=4,column=1)
+        #データ受け取り、次の周波数を入力
         line = X.readline().decode('ascii').rstrip()
         ep = line
         print(fre+" "+line)
@@ -45,10 +40,13 @@ def maindef():
             root.after(10,maindef)
         else:
             pass
-        
         X.write('a'.encode('ascii')) # arduinoへ開始の合図を送る。 
         X.write(fre.encode('ascii'))
         X.flush() # バッファ内の待ちデータを送りきる。
+        var=tk.StringVar()
+        var.set(fre)
+        voltage_exit=tk.Entry(root,font=font,textvariable=var) #受け取ったデータをGUIに表示する
+        voltage_exit.grid(row=4,column=1)
         time.sleep(1)
     elif x==1 and y==1:
         #データを送らない、後始末
@@ -60,6 +58,7 @@ def maindef():
         L.append("stop")
         x=0
         y=0
+    #測定するとき以外は0.01秒で返す．
     if x==0 and y==1:
         root.after(8000,maindef)
     else:
@@ -70,7 +69,7 @@ class Ser:
         self.ser=None
         
     def start_connect(self):
-        comport1='COM3' # arduino ideで調べてから。
+        comport='COM3' # arduino ideで調べてから。
         tushinsokudo=57600 # arduinoのプログラムと一致させる。
         timeout=5 # エラーになったときのために。とりあえず１０秒で戻ってくる。
         self.ser = serial.Serial(comport,tushinsokudo,timeout=timeout)
@@ -82,31 +81,20 @@ class Ser:
         global data
         global fre
         global laf
-        #global var
         ser=self.ser
         data=v.get() # vの文字列は、v.get()で取り出す。 下部send_entry内のTextvariableでデータ入力
-        fre=u.get()
+        fre=u.get() 
         laf=s.get()
         if data.isdecimal()==True and fre.isdecimal()==True and laf.isdecimal()==True:
                 ser.write('a'.encode('ascii')) # arduinoへ開始の合図を送る。 
                 ser.write(fre.encode('ascii'))
                 ser.flush() # バッファ内の待ちデータを送りきる。
-                print("send: "+data)
+                print("send ed:"+data+" ff:"+fre+" laf:"+laf)
                 time.sleep(10) # send直後にreceiveしようとすると、timeoutになるので
                 y=1#周波数データ送信完了
         else:
                 print("error")
-                v.set("")
-    def Re_send(self):
-        global data
-        global fre
-        ser=self.ser
-        #fre=str(int(fre) + int(data))
-        #ser.write('a'.encode('ascii')) # arduinoへ開始の合図を送る。 
-        #ser.write(fre.encode('ascii'))
-        #ser.flush() # バッファ内の待ちデータを送りきる。
-        #time.sleep(1)
-        
+                v.set("")        
     def stop_com(self):
         global x
         x=1
@@ -130,11 +118,11 @@ def saveas():
         
 root=tk.Tk()
 font=tkFont.Font(size=24)
-ser1=Ser() #
-ser2=
+ser=Ser() 
 v=tk.StringVar() # tk.TK()の後に書く。
 u=tk.StringVar()
 s=tk.StringVar()
+#ボタン入力
 connect_button=tk.Button(root,text='connect',font=font,height=2,padx=20,command=ser.connect)
 connect_button.grid(row=0,column=0)
 send_button=tk.Button(root,text='send',font=font,height=2,padx=20,command=ser.send_com)
@@ -170,6 +158,7 @@ label3_Hz.grid(row=3,column=3)
 label4_Hz=tk.Label(root,font=font,text='Hz')
 label4_Hz.grid(row=4,column=2)
 
+#セーブボタン
 saveas_button=tk.Button(root,text='save',font=font,height=2,padx=20,command=saveas)
 saveas_button.grid(row=0,column=3)
 saveas_button.configure(state=tk.DISABLED)
