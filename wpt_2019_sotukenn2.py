@@ -5,6 +5,7 @@ import tkinter as tk
 import tkinter.filedialog as tkFileDialog
 import tkinter.font as tkFont
 
+
 x=0
 y=0
 L=[]
@@ -36,9 +37,9 @@ def maindef():
         time.sleep(10)
         line1 = ser1.readline().decode('ascii').rstrip()
         line2 = ser2.readline().decode('ascii').rstrip()
-        line3 = str(round(float(line2) / float(line1),3))
-        print(fre+" "+line1+" "+line2+" "+line3)
-        L.append(fre+" "+line1+" "+line2+" "+line3)
+        print(fre+" "+line1+" "+line2)
+        
+        L.append(fre+" "+line1+" "+line2)
         fre=str(int(fre) + int(data))
         if int(fre) > int(laf):
             x=1
@@ -76,7 +77,7 @@ class Ser:
         comport1='COM3' # arduino ideで調べてから。送電側
         comport2='COM4' #受電側
         tushinsokudo=57600 # arduinoのプログラムと一致させる。
-        timeout=11 # エラーになったときのために。とりあえず１1秒で戻ってくる。
+        timeout=10 # エラーになったときのために。とりあえず１０秒で戻ってくる。
         ser1=self.ser
         ser2=self.ser
         ser1 = serial.Serial(comport1,tushinsokudo,timeout=timeout)
@@ -92,6 +93,7 @@ class Ser:
         global ser1
         global ser2
         global L
+        L.clear()
         data=v.get() # vの文字列は、v.get()で取り出す。 下部send_entry内のTextvariableでデータ入力
         fre=u.get() 
         laf=s.get()
@@ -101,10 +103,8 @@ class Ser:
                 ser1.write(fre.encode('ascii'))
                 ser1.flush() # バッファ内の待ちデータを送りきる。
                 ser2.flush()
-                print("send incease_fre:"+data+" first_fre:"+fre+" last_fre:"+laf)
-                print("frequency transmission_ep receiving_ep power_efficiency")
-                L.append("increase_frequency:"+data+" first_frequency:"+fre+" last_frequency:"+laf)
-                L.append("frequency transmission_ep receiving_ep power_efficiency")
+                print("send ed:"+data+" ff:"+fre+" laf:"+laf)
+                L.append("ed:"+data+",ff:"+fre+",laf:"+laf)
                 y=1#周波数データ送信完了
         else:
                 print("error")
@@ -129,6 +129,8 @@ def saveas():
     
     with open(filename,'w') as fout:
         fout.write("\n".join(L))
+def plot():
+    
         
 root=tk.Tk()
 font=tkFont.Font(size=24)
@@ -157,15 +159,15 @@ max_entry.grid(row=3,column=1,columnspan=2)
 max_entry.configure(state=tk.DISABLED)
 
 #label
-label1=tk.Label(root,font=font,text='increase_frequency')
+label1=tk.Label(root,font=font,text='1目盛り')
 label1.grid(row=1,column=0)
 label1_Hz=tk.Label(root,font=font,text='kHz')
 label1_Hz.grid(row=1,column=3)
-label2=tk.Label(root,font=font,text='first_frequency')
+label2=tk.Label(root,font=font,text='初期周波数')
 label2.grid(row=2,column=0)
 label2_Hz=tk.Label(root,font=font,text='kHz')
 label2_Hz.grid(row=2,column=3)
-label3=tk.Label(root,font=font,text='last_frequency')
+label3=tk.Label(root,font=font,text='最大周波数')
 label3.grid(row=3,column=0)
 label3_Hz=tk.Label(root,font=font,text='kHz')
 label3_Hz.grid(row=3,column=3)
