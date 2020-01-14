@@ -5,7 +5,6 @@ import tkinter as tk
 import tkinter.filedialog as tkFileDialog
 import tkinter.font as tkFont
 
-
 x=0
 y=0
 L=[]
@@ -34,38 +33,37 @@ def maindef():
         x=0
     elif x==0 and y==1:
         #データ受け取り、次の周波数を入力
-        time.sleep(10)
         line1 = ser1.readline().decode('ascii').rstrip()
         line2 = ser2.readline().decode('ascii').rstrip()
         line3 = str(round(float(line2) / float(line1),3))
         print(fre+" "+line1+" "+line2+" "+line3)
         L.append(fre+" "+line1+" "+line2+" "+line3)
-        fre=str(int(fre) + int(data))
-        if int(fre) > int(laf):
-            x=1
-            root.after(10,maindef)
+        if int(fre)+int(data) > int(laf) and int(laf) > int(fre):
+            fre=str(laf)
         else:
-            pass
-        ser1.write('a'.encode('ascii')) # arduinoへ開始の合図を送る.
-        ser2.write('a'.encode('ascii'))
-        ser1.write(fre.encode('ascii'))
-        ser1.flush() # バッファ内の待ちデータを送りきる。
-        ser2.flush()
-        time.sleep(2)
+            fre=str(int(fre) + int(data))
+        
+        if int(fre) > int(laf):
+            stop_data()
+            x=1
+            
+        else:
+            resend_freq(fre)
     elif x==1 and y==1:
         #データを送らない、後始末
-        ser1.write('b'.encode('ascii')) # arduinoへ終了の合図を送る。
-        ser2.write('b'.encode('ascii'))
-        ser1.flush() # バッファ内の待ちデータを送りきる。
-        ser2.flush()
-        print("--stop--")
-        time.sleep(1) # 安全のため
-        L.append("stop")
         x=0
         y=0
-        fre='0' 
+        send_button.configure(state=tk.NORMAL)
+        stop_button.configure(state=tk.NORMAL)
+        send_entry.configure(state=tk.NORMAL)
+        defalt_entry.configure(state=tk.NORMAL)
+        saveas_button.configure(state=tk.NORMAL)
+        max_entry.configure(state=tk.NORMAL)
     #測定するとき以外は0.01秒で返す．
-    root.after(10,maindef)
+    if x==0 and y==1:
+        root.after(10000,maindef)
+    else:
+        root.after(10,maindef)
 
 class Ser:
     def __init__(self):
@@ -75,9 +73,9 @@ class Ser:
         global ser1
         global ser2
         comport1='COM3' # arduino ideで調べてから。送電側
-        comport2='COM4' #受電側
+        comport2='COM4' #受電側必ずcomportは送電側受電側異なるものを使用
         tushinsokudo=57600 # arduinoのプログラムと一致させる。
-        timeout=11 # エラーになったときのために。とりあえず１1秒で戻ってくる。
+        timeout=5# エラーになったときのために。とりあえず5秒で戻ってくる。
         ser1=self.ser
         ser2=self.ser
         ser1 = serial.Serial(comport1,tushinsokudo,timeout=timeout)
@@ -97,22 +95,21 @@ class Ser:
         fre=u.get() 
         laf=s.get()
         if data.isdecimal()==True and fre.isdecimal()==True and laf.isdecimal()==True:
-                ser1.write('a'.encode('ascii')) # arduinoへ開始の合図を送る。
-                ser2.write('a'.encode('ascii'))
-                ser1.write(fre.encode('ascii'))
-                ser1.flush() # バッファ内の待ちデータを送りきる。
-                ser2.flush()
+                resend_freq(fre)
                 print("send incease_fre:"+data+" first_fre:"+fre+" last_fre:"+laf)
                 print("frequency transmission_ep receiving_ep power_efficiency")
                 L.append("increase_frequency:"+data+" first_frequency:"+fre+" last_frequency:"+laf)
                 L.append("frequency transmission_ep receiving_ep power_efficiency")
+                time.sleep(8)
                 y=1#周波数データ送信完了
         else:
                 print("error")
                 v.set("")        
     def stop_com(self):
         global x
+        stop_data()
         x=1
+        
 
     def connect(self):
         self.start_connect()
@@ -130,7 +127,38 @@ def saveas():
     
     with open(filename,'w') as fout:
         fout.write("\n".join(L))
+def resend_freq(a):
+    global ser1
+    global ser2
+    ser1.write('a'.encode('ascii')) # arduinoへ開始の合図を送る。
+    ser2.write('a'.encode('ascii'))
+    ser1.write(a.encode('ascii'))
+    ser1.flush() # バッファ内の待ちデータを送りきる。
+    ser2.flush()
+#ストップするときの関数
+def stop_data():
+    global ser1
+    global ser2
+    global fre
+    #root.afterがelif x=1 and y=1:にいくまでボタンやエントリーをストップ
+    send_button.configure(state=tk.DISABLED)
+    stop_button.configure(state=tk.DISABLED)
+    send_entry.configure(state=tk.DISABLED)
+    defalt_entry.configure(state=tk.DISABLED)
+    saveas_button.configure(state=tk.DISABLED)
+    max_entry.configure(state=tk.DISABLED)
+    
+    ser1.write('b'.encode('ascii')) # arduinoへ終了の合図を送る。
+    ser2.write('b'.encode('ascii'))
+    ser1.flush() # バッファ内の待ちデータを送りきる。
+    ser2.flush()
+    print("--stop--")
+    time.sleep(1) # 安全のため
+    L.append("stop")
+    fre='0'
         
+    
+    
 root=tk.Tk()
 font=tkFont.Font(size=24)
 ser=Ser() 
