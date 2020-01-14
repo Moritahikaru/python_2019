@@ -7,12 +7,12 @@ import tkinter.font as tkFont
 
 x=0
 y=0
-L=[]
+L=[] #dataを保存
 fre=0 #測定範囲の最小値
 laf=0 #1目盛りの周波数
 data=0 #測定範囲の最大値
-ser1=0
-ser2=0
+ser1=0 #送電側のシリアル通信
+ser2=0 #受電側のシリアル通信
 
 
 def maindef():
@@ -23,8 +23,8 @@ def maindef():
     global fre
     global data
     global laf
-    global ser1
-    global ser2
+    global ser1 
+    global ser2 
     
    
     if x==0 and y==0:
@@ -91,7 +91,10 @@ class Ser:
         global ser1
         global ser2
         global L
-        data=v.get() # vの文字列は、v.get()で取り出す。 下部send_entry内のTextvariableでデータ入力
+        # v,u,sの文字列は、
+        #ぞれぞれv.get(),u.get(),s.get()で取り出す。
+        #下部send_entry内のTextvariableでデータ入力
+        data=v.get()
         fre=u.get() 
         laf=s.get()
         if data.isdecimal()==True and fre.isdecimal()==True and laf.isdecimal()==True:
@@ -127,7 +130,7 @@ def saveas():
     
     with open(filename,'w') as fout:
         fout.write("\n".join(L))
-#決めた周波数ずつ送る場合
+#周波数をclock_genelaterに送る
 def resend_freq(a):
     global ser1
     global ser2
@@ -141,6 +144,7 @@ def stop_data():
     global ser1
     global ser2
     global fre
+    #記録時間が10秒と長いため
     #root.afterがelif x=1 and y=1:にいくまでボタンやエントリーをストップ
     send_button.configure(state=tk.DISABLED)
     stop_button.configure(state=tk.DISABLED)
