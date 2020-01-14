@@ -4,6 +4,7 @@ import csv
 import tkinter as tk
 import tkinter.filedialog as tkFileDialog
 import tkinter.font as tkFont
+import tkinter.ttk as ttk
 import matplotlib.pyplot as plt
 
 x=0
@@ -19,6 +20,7 @@ senL=[]
 reaL=[]
 peff=[]
 
+
 def maindef():
     global x
     global y
@@ -28,9 +30,12 @@ def maindef():
     global data
     global laf
     global ser1 
-    global ser2 
+    global ser2
+    global kHzL
+    global senL
+    global reaL
+    global peff
     
-   
     if x==0 and y==0:
         pass
     elif x==1 and y==0:
@@ -42,6 +47,11 @@ def maindef():
         line3 = str(round(float(line2) / float(line1),3))
         print(fre+" "+line1+" "+line2+" "+line3)
         L.append(fre+" "+line1+" "+line2+" "+line3)
+        kHzL.append(int(fre))
+        senL.append(float(line1))
+        reaL.append(float(line2))
+        peff.append(float(line3))
+        
         if int(fre)+int(data) > int(laf) and int(laf) > int(fre):
             fre=str(laf)
         else:
@@ -57,12 +67,7 @@ def maindef():
         #データを送らない、後始末
         x=0
         y=0
-        send_button.configure(state=tk.NORMAL)
-        stop_button.configure(state=tk.NORMAL)
-        send_entry.configure(state=tk.NORMAL)
-        defalt_entry.configure(state=tk.NORMAL)
-        saveas_button.configure(state=tk.NORMAL)
-        max_entry.configure(state=tk.NORMAL)
+        button()
     #測定するとき以外は0.01秒で返す．
     if x==0 and y==1:
         root.after(10000,maindef)
@@ -95,14 +100,21 @@ class Ser:
         global ser1
         global ser2
         global L
-        global kHz
+        global kHzL
+        global senL
+        global reaL
+        global peff
         # v,u,sの文字列は、
         #ぞれぞれv.get(),u.get(),s.get()で取り出す。
         #下部send_entry内のTextvariableでデータ入力
         data=v.get()
         fre=u.get() 
         laf=s.get()
-        kHz.clear()
+        #図作成のための配列を初期化する
+        kHzL.clear()
+        senL.clear()
+        reaL.clear()
+        peff.clear()
         if data.isdecimal()==True and fre.isdecimal()==True and laf.isdecimal()==True:
                 resend_freq(fre)
                 print("send incease_fre:"+data+" first_fre:"+fre+" last_fre:"+laf)
@@ -122,21 +134,24 @@ class Ser:
 
     def connect(self):
         self.start_connect()
-        send_button.configure(state=tk.NORMAL)
-        stop_button.configure(state=tk.NORMAL)
-        send_entry.configure(state=tk.NORMAL)
-        defalt_entry.configure(state=tk.NORMAL)
-        saveas_button.configure(state=tk.NORMAL)
-        max_entry.configure(state=tk.NORMAL)
+        button()
         connect_button.configure(state=tk.DISABLED)
-
+        
 def saveas():
     global L
     filename=tkFileDialog.asksaveasfilename(defaultextension=".csv",filetypes=[("csv","*.csv*")])
     
     with open(filename,'w') as fout:
         fout.write("\n".join(L))
-#周波数をclock_genelaterに送る
+        
+def plot_com():
+    global kHzL
+    global senL
+    global reaL
+    global peff
+    
+    
+#周波数をclock_generaterに送る
 def resend_freq(a):
     global ser1
     global ser2
@@ -157,6 +172,7 @@ def stop_data():
     send_entry.configure(state=tk.DISABLED)
     defalt_entry.configure(state=tk.DISABLED)
     saveas_button.configure(state=tk.DISABLED)
+    plot_button.configure(state=tk.DISABLED)
     max_entry.configure(state=tk.DISABLED)
     
     ser1.write('b'.encode('ascii')) # arduinoへ終了の合図を送る。
@@ -168,7 +184,14 @@ def stop_data():
     L.append("stop")
     fre='0'
         
-    
+def button():
+    send_button.configure(state=tk.NORMAL)
+    stop_button.configure(state=tk.NORMAL)
+    send_entry.configure(state=tk.NORMAL)
+    defalt_entry.configure(state=tk.NORMAL)
+    saveas_button.configure(state=tk.NORMAL)
+    max_entry.configure(state=tk.NORMAL)
+    plot_button.configure(state=tk.NORMAL)
     
 root=tk.Tk()
 font=tkFont.Font(size=24)
@@ -185,6 +208,9 @@ send_button.configure(state=tk.DISABLED)
 stop_button=tk.Button(root,text='stop',font=font,height=2,padx=20,command=ser.stop_com)
 stop_button.grid(row=0,column=2)
 stop_button.configure(state=tk.DISABLED)
+plot_button=tk.Button(root,text='plot',font=font,height=2,padx=20,command=plot_com)
+plot_button.grid(row=0,column=4)
+plot_button.configure(state=tk.DISABLED)
 #entry
 send_entry=tk.Entry(root,font=font,textvariable=v)
 send_entry.grid(row=1,column=1,columnspan=2)
@@ -209,11 +235,19 @@ label3=tk.Label(root,font=font,text='last_frequency')
 label3.grid(row=3,column=0)
 label3_Hz=tk.Label(root,font=font,text='kHz')
 label3_Hz.grid(row=3,column=3)
+label4_combo=tk.Label(root,text='measured_value')
+label4_combo.grid(row=0,column=5,sticky=tk.N)
 
 #セーブボタン
 saveas_button=tk.Button(root,text='save',font=font,height=2,padx=20,command=saveas)
 saveas_button.grid(row=0,column=3)
 saveas_button.configure(state=tk.DISABLED)
+
+#Combobox
+valuelist=['freqency-transmission','frequency-receive','frequency-efficiency']
+v1=tk.StringVar
+plot_combo=ttk.Combobox(root,values=valuelist,textvariable=v1)
+plot_combo.grid(row=0,column=5)
 
 root.after(10,maindef)
 root.mainloop()   
