@@ -127,6 +127,7 @@ def saveas():
     
     with open(filename,'w') as fout:
         fout.write("\n".join(L))
+#決めた周波数ずつ送る場合
 def resend_freq(a):
     global ser1
     global ser2
