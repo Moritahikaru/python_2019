@@ -107,7 +107,7 @@ class Ser:
         fre=u.get() 
         laf=s.get()
         tm=v1.get() 
-        if data.isdecimal()==True and fre.isdecimal()==True and laf.isdecimal()==True:
+        if data.isdecimal()==True and fre.isdecimal()==True and laf.isdecimal()==True and tm.isdecimal()==True:
                 ser1.write('a'.encode('ascii')) # arduinoへ開始の合図を送る。
                 ser2.write('a'.encode('ascii'))
                 ser1.write(fre.encode('ascii'))
@@ -129,7 +129,10 @@ class Ser:
                 t=1
         else:
                 print("error")
-                v.set("")        
+                v.set("")
+                u.set("")
+                s.set("")
+                v1.set("")
     def stop_com(self):
         global x
         x=3
