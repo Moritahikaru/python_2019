@@ -18,7 +18,6 @@ tm=0
 
 def maindef():
     global x
-    #global y
     global L
     global ser
     global fre
@@ -27,9 +26,7 @@ def maindef():
     global ser1 
     global ser2
     global t
-    global tm
-    #global z
-    
+    global tm    
    
     if x==0:
         t=1#一応
@@ -52,9 +49,9 @@ def maindef():
     elif x==2:
         line1 = ser1.readline().decode('ascii').rstrip()
         line2 = ser2.readline().decode('ascii').rstrip()
-        #line3 = str(round(float(line2) / float(line1),3))
-        print(fre+" "+line1+" "+line2+" ")
-        L.append(fre+" "+line1+" "+line2+" ")
+        line3 = str(round(float(line2) / float(line1),3))
+        print(fre+" "+line1+" "+line2+" "+line3)
+        L.append(fre+" "+line1+" "+line2+" "+line3)
         if t>=int(tm)*10:
             if float(fre)+float(data)*0.001 > float(laf) and float(laf) > float(fre):
                 fre=laf
@@ -71,7 +68,7 @@ def maindef():
     elif x==4:
         line1 = ser1.readline().decode('ascii').rstrip()
         line2 = ser2.readline().decode('ascii').rstrip()
-        #line3 = str(round(float(line2) / float(line1),3))
+        line3 = str(round(float(line2) / float(line1),3))
         print(fre+" "+line1+" "+line2+" ")
         L.append(fre+" "+line1+" "+line2+" ")
     
