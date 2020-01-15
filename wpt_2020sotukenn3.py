@@ -6,64 +6,74 @@ import tkinter.filedialog as tkFileDialog
 import tkinter.font as tkFont
 
 x=0
-y=0
 L=[] #dataを保存
 fre=0 #測定範囲の最小値
 laf=0 #1目盛りの周波数
 data=0 #測定範囲の最大値
 ser1=0 #送電側のシリアル通信
 ser2=0 #受電側のシリアル通信
+t=0
+
 
 
 def maindef():
     global x
-    global y
+    #global y
     global L
     global ser
     global fre
     global data
     global laf
     global ser1 
-    global ser2 
+    global ser2
+    global t
+    #global z
     
    
-    if x==0 and y==0:
-        pass
-    elif x==1 and y==0:
-        x=0
-    elif x==0 and y==1:
+    if x==0:
+        t=0
+    elif x==1:
         #データ受け取り、次の周波数を入力
+        if int(fre) > int(laf):
+            x=3
+        else:
+            
+            ser1.write('a'.encode('ascii')) # arduinoへ開始の合図を送る。
+            ser2.write('a'.encode('ascii'))
+            ser1.write(fre.encode('ascii'))
+            ser1.flush() # バッファ内の待ちデータを送りきる。
+            ser2.flush()
+            print("send:"+fre+"kHz")
+            L.append(fre+"kHz")
+            x=2
+        t=0
+    elif x==2:
         line1 = ser1.readline().decode('ascii').rstrip()
         line2 = ser2.readline().decode('ascii').rstrip()
-        line3 = str(round(float(line2) / float(line1),3))
-        print(fre+" "+line1+" "+line2+" "+line3)
-        L.append(fre+" "+line1+" "+line2+" "+line3)
-        if int(fre)+int(data) > int(laf) and int(laf) > int(fre):
-            fre=str(laf)
-        else:
-            fre=str(int(fre) + int(data))
-        
-        if int(fre) > int(laf):
-            stop_data()
+        #line3 = str(round(float(line2) / float(line1),3))
+        print(fre+" "+line1+" "+line2+" ")
+        L.append(fre+" "+line1+" "+line2+" ")
+        if t>=100:
+            if int(fre)+int(data) > int(laf) and int(laf) > int(fre):
+                fre=str(laf)
+            else:
+                fre=str(int(fre) + int(data))
             x=1
-            
         else:
-            resend_freq(fre)
-    elif x==1 and y==1:
+            t=t+1
+            
+    elif x==3:
         #データを送らない、後始末
+        stop_data()
         x=0
-        y=0
-        send_button.configure(state=tk.NORMAL)
-        stop_button.configure(state=tk.NORMAL)
-        send_entry.configure(state=tk.NORMAL)
-        defalt_entry.configure(state=tk.NORMAL)
-        saveas_button.configure(state=tk.NORMAL)
-        max_entry.configure(state=tk.NORMAL)
-    #測定するとき以外は0.01秒で返す．
-    if x==0 and y==1:
-        root.after(10000,maindef)
-    else:
-        root.after(10,maindef)
+    elif x==4:
+        line1 = ser1.readline().decode('ascii').rstrip()
+        line2 = ser2.readline().decode('ascii').rstrip()
+        #line3 = str(round(float(line2) / float(line1),3))
+        print(fre+" "+line1+" "+line2+" ")
+        L.append(fre+" "+line1+" "+line2+" ")
+    
+    root.after(10,maindef)
 
 class Ser:
     def __init__(self):
@@ -84,7 +94,6 @@ class Ser:
         
     def send_com(self):
         global x
-        global y
         global data
         global fre
         global laf
@@ -98,20 +107,28 @@ class Ser:
         fre=u.get() 
         laf=s.get()
         if data.isdecimal()==True and fre.isdecimal()==True and laf.isdecimal()==True:
-                resend_freq(fre)
+                ser1.write('a'.encode('ascii')) # arduinoへ開始の合図を送る。
+                ser2.write('a'.encode('ascii'))
+                ser1.write(fre.encode('ascii'))
+                ser1.flush() # バッファ内の待ちデータを送りきる。
+                ser2.flush()
+                print("send:"+fre+"kHz")
+                L.append(fre+"kHz")
                 print("send incease_fre:"+data+" first_fre:"+fre+" last_fre:"+laf)
                 print("frequency transmission_ep receiving_ep power_efficiency")
                 L.append("increase_frequency:"+data+" first_frequency:"+fre+" last_frequency:"+laf)
                 L.append("frequency transmission_ep receiving_ep power_efficiency")
-                time.sleep(8)
-                y=1#周波数データ送信完了
+                if int(data)==0:
+                    x=4
+                else:
+                    x=2#周波数データ送信完了
+                t=0
         else:
                 print("error")
                 v.set("")        
     def stop_com(self):
         global x
-        stop_data()
-        x=1
+        x=3
         
 
     def connect(self):
@@ -131,38 +148,19 @@ def saveas():
     with open(filename,'w') as fout:
         fout.write("\n".join(L))
 #周波数をclock_genelaterに送る
-def resend_freq(a):
-    global ser1
-    global ser2
-    ser1.write('a'.encode('ascii')) # arduinoへ開始の合図を送る。
-    ser2.write('a'.encode('ascii'))
-    ser1.write(a.encode('ascii'))
-    ser1.flush() # バッファ内の待ちデータを送りきる。
-    ser2.flush()
 #ストップするときの関数
 def stop_data():
     global ser1
     global ser2
     global fre
-    #記録時間が10秒と長いため
-    #root.afterがelif x=1 and y=1:にいくまでボタンやエントリーをストップ
-    send_button.configure(state=tk.DISABLED)
-    stop_button.configure(state=tk.DISABLED)
-    send_entry.configure(state=tk.DISABLED)
-    defalt_entry.configure(state=tk.DISABLED)
-    saveas_button.configure(state=tk.DISABLED)
-    max_entry.configure(state=tk.DISABLED)
-    
     ser1.write('b'.encode('ascii')) # arduinoへ終了の合図を送る。
     ser2.write('b'.encode('ascii'))
     ser1.flush() # バッファ内の待ちデータを送りきる。
     ser2.flush()
     print("--stop--")
-    time.sleep(1) # 安全のため
     L.append("stop")
     fre='0'
-        
-    
+    time.sleep(1)
     
 root=tk.Tk()
 font=tkFont.Font(size=24)
@@ -209,5 +207,5 @@ saveas_button=tk.Button(root,text='save',font=font,height=2,padx=20,command=save
 saveas_button.grid(row=0,column=3)
 saveas_button.configure(state=tk.DISABLED)
 
-root.after(10,maindef)
+root.after(100,maindef)
 root.mainloop()   

@@ -4,8 +4,8 @@ import csv
 import tkinter as tk
 import tkinter.filedialog as tkFileDialog
 import tkinter.font as tkFont
-import tkinter.ttk as ttk
-import matplotlib.pyplot as plt
+#import tkinter.ttk as ttk
+#import matplotlib.pyplot as plt
 
 x=0
 y=0
@@ -15,10 +15,10 @@ laf=0 #1目盛りの周波数
 data=0 #測定範囲の最大値
 ser1=0 #送電側のシリアル通信
 ser2=0 #受電側のシリアル通信
-kHzL=[]
-senL=[]
-reaL=[]
-peff=[]
+#kHzL=[]
+#senL=[]
+#reaL=[]
+#peff=[]
 
 
 def maindef():
@@ -31,10 +31,10 @@ def maindef():
     global laf
     global ser1 
     global ser2
-    global kHzL
-    global senL
-    global reaL
-    global peff
+    #global kHzL
+    #global senL
+    #global reaL
+    #global peff
     
     if x==0 and y==0:
         pass
@@ -47,10 +47,10 @@ def maindef():
         line3 = str(round(float(line2) / float(line1),3))
         print(fre+" "+line1+" "+line2+" "+line3)
         L.append(fre+" "+line1+" "+line2+" "+line3)
-        kHzL.append(int(fre))
-        senL.append(float(line1))
-        reaL.append(float(line2))
-        peff.append(float(line3))
+        #kHzL.append(int(fre))
+        #senL.append(float(line1))
+        #reaL.append(float(line2))
+        #peff.append(float(line3))
         
         if int(fre)+int(data) > int(laf) and int(laf) > int(fre):
             fre=str(laf)
@@ -100,10 +100,10 @@ class Ser:
         global ser1
         global ser2
         global L
-        global kHzL
-        global senL
-        global reaL
-        global peff
+        #global kHzL
+        #global senL
+        #global reaL
+        #global peff
         # v,u,sの文字列は、
         #ぞれぞれv.get(),u.get(),s.get()で取り出す。
         #下部send_entry内のTextvariableでデータ入力
@@ -111,10 +111,10 @@ class Ser:
         fre=u.get() 
         laf=s.get()
         #図作成のための配列を初期化する
-        kHzL.clear()
-        senL.clear()
-        reaL.clear()
-        peff.clear()
+        #kHzL.clear()
+        #senL.clear()
+        #reaL.clear()
+        #peff.clear()
         if data.isdecimal()==True and fre.isdecimal()==True and laf.isdecimal()==True:
                 resend_freq(fre)
                 print("send incease_fre:"+data+" first_fre:"+fre+" last_fre:"+laf)
@@ -144,11 +144,11 @@ def saveas():
     with open(filename,'w') as fout:
         fout.write("\n".join(L))
         
-def plot_com():
-    global kHzL
-    global senL
-    global reaL
-    global peff
+#def plot_com():
+    #global kHzL
+    #global senL
+    #global reaL
+    #global peff
     
     
 #周波数をclock_generaterに送る
@@ -208,9 +208,9 @@ send_button.configure(state=tk.DISABLED)
 stop_button=tk.Button(root,text='stop',font=font,height=2,padx=20,command=ser.stop_com)
 stop_button.grid(row=0,column=2)
 stop_button.configure(state=tk.DISABLED)
-plot_button=tk.Button(root,text='plot',font=font,height=2,padx=20,command=plot_com)
-plot_button.grid(row=0,column=4)
-plot_button.configure(state=tk.DISABLED)
+#plot_button=tk.Button(root,text='plot',font=font,height=2,padx=20,command=plot_com)
+#plot_button.grid(row=0,column=4)
+#plot_button.configure(state=tk.DISABLED)
 #entry
 send_entry=tk.Entry(root,font=font,textvariable=v)
 send_entry.grid(row=1,column=1,columnspan=2)
@@ -235,8 +235,8 @@ label3=tk.Label(root,font=font,text='last_frequency')
 label3.grid(row=3,column=0)
 label3_Hz=tk.Label(root,font=font,text='kHz')
 label3_Hz.grid(row=3,column=3)
-label4_combo=tk.Label(root,text='measured_value')
-label4_combo.grid(row=0,column=5,sticky=tk.N)
+#label4_combo=tk.Label(root,text='measured_value')
+#label4_combo.grid(row=0,column=5,sticky=tk.N)
 
 #セーブボタン
 saveas_button=tk.Button(root,text='save',font=font,height=2,padx=20,command=saveas)
@@ -244,10 +244,10 @@ saveas_button.grid(row=0,column=3)
 saveas_button.configure(state=tk.DISABLED)
 
 #Combobox
-valuelist=['freqency-transmission','frequency-receive','frequency-efficiency']
-v1=tk.StringVar
-plot_combo=ttk.Combobox(root,values=valuelist,textvariable=v1)
-plot_combo.grid(row=0,column=5)
+#valuelist=['freqency-transmission','frequency-receive','frequency-efficiency']
+#v1=tk.StringVar
+#plot_combo=ttk.Combobox(root,values=valuelist,textvariable=v1)
+#plot_combo.grid(row=0,column=5)
 
 root.after(10,maindef)
 root.mainloop()   
