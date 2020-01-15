@@ -12,8 +12,8 @@ laf=0 #1目盛りの周波数
 data=0 #測定範囲の最大値
 ser1=0 #送電側のシリアル通信
 ser2=0 #受電側のシリアル通信
-t=0
-
+t=1
+tm=0
 
 
 def maindef():
@@ -27,14 +27,15 @@ def maindef():
     global ser1 
     global ser2
     global t
+    global tm
     #global z
     
    
     if x==0:
-        t=0#一応
+        t=1#一応
     elif x==1:
         #データ受け取り、次の周波数を入力
-        if int(fre) > int(laf):
+        if float(fre) > float(laf):
             x=3
         else:
             
@@ -47,18 +48,18 @@ def maindef():
             print("send:"+fre+"kHz")
             L.append(fre+"kHz")
             x=2
-        t=0
+        t=1
     elif x==2:
         line1 = ser1.readline().decode('ascii').rstrip()
         line2 = ser2.readline().decode('ascii').rstrip()
         #line3 = str(round(float(line2) / float(line1),3))
         print(fre+" "+line1+" "+line2+" ")
         L.append(fre+" "+line1+" "+line2+" ")
-        if t>=100:
-            if int(fre)+int(data) > int(laf) and int(laf) > int(fre):
-                fre=str(laf)
+        if t>=int(tm)*10:
+            if float(fre)+float(data)*0.001 > float(laf) and float(laf) > float(fre):
+                fre=laf
             else:
-                fre=str(int(fre) + int(data))
+                fre=str(round(float(fre) + float(data)*0.001,3))
             x=1
         else:
             t=t+1
@@ -101,17 +102,20 @@ class Ser:
         global ser1
         global ser2
         global L
+        global tm
         # v,u,sの文字列は、
         #ぞれぞれv.get(),u.get(),s.get()で取り出す。
         #下部send_entry内のTextvariableでデータ入力
         data=v.get()
         fre=u.get() 
         laf=s.get()
+        tm=v1.get() 
         if data.isdecimal()==True and fre.isdecimal()==True and laf.isdecimal()==True:
                 ser1.write('a'.encode('ascii')) # arduinoへ開始の合図を送る。
                 ser2.write('a'.encode('ascii'))
                 ser1.write(fre.encode('ascii'))
-                ser2.write(fre.encode('ascii'))
+                ser2.write(fre.encode('ascii'))#送電側と受電側の送るデータの量を合わせるため，
+                #あえて周波数を送る.送らなかった場合，送電側と受電側の出力にずれが生じるから．
                 ser1.flush() # バッファ内の待ちデータを送りきる。
                 ser2.flush()
                 print("send incease_fre:"+data+" first_fre:"+fre+" last_fre:"+laf)
@@ -121,11 +125,11 @@ class Ser:
                 print("send:"+fre+"kHz")
                 L.append(fre+"kHz")
                 
-                if int(data)==0:
+                if float(data)==0.0:
                     x=4
                 else:
                     x=2
-                t=0
+                t=1
         else:
                 print("error")
                 v.set("")        
@@ -142,6 +146,7 @@ class Ser:
         defalt_entry.configure(state=tk.NORMAL)
         saveas_button.configure(state=tk.NORMAL)
         max_entry.configure(state=tk.NORMAL)
+        time_entry.configure(state=tk.NORMAL)
         connect_button.configure(state=tk.DISABLED)
 
 def saveas():
@@ -172,6 +177,7 @@ ser=Ser()
 v=tk.StringVar() # tk.TK()の後に書く。
 u=tk.StringVar()
 s=tk.StringVar()
+v1=tk.StringVar()
 #ボタン入力
 connect_button=tk.Button(root,text='connect',font=font,height=2,padx=20,command=ser.connect)
 connect_button.grid(row=0,column=0)
@@ -191,11 +197,14 @@ defalt_entry.configure(state=tk.DISABLED)
 max_entry=tk.Entry(root,font=font,textvariable=s)
 max_entry.grid(row=3,column=1,columnspan=2)
 max_entry.configure(state=tk.DISABLED)
+time_entry=tk.Entry(root,font=font,textvariable=v1)
+time_entry.grid(row=4,column=1,columnspan=2)
+time_entry.configure(state=tk.DISABLED)
 
 #label
 label1=tk.Label(root,font=font,text='increase_frequency')
 label1.grid(row=1,column=0)
-label1_Hz=tk.Label(root,font=font,text='kHz')
+label1_Hz=tk.Label(root,font=font,text='Hz')
 label1_Hz.grid(row=1,column=3)
 label2=tk.Label(root,font=font,text='first_frequency')
 label2.grid(row=2,column=0)
@@ -205,6 +214,10 @@ label3=tk.Label(root,font=font,text='last_frequency')
 label3.grid(row=3,column=0)
 label3_Hz=tk.Label(root,font=font,text='kHz')
 label3_Hz.grid(row=3,column=3)
+label4_time=tk.Label(root,font=font,text='Measurement_Time')
+label4_second=tk.Label(root,font=font,text='s')
+label4_time.grid(row=4,column=0)
+label4_second.grid(row=4,column=3)
 
 #セーブボタン
 saveas_button=tk.Button(root,text='save',font=font,height=2,padx=20,command=saveas)
